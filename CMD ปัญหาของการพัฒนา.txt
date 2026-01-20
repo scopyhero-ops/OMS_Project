@@ -1,0 +1,62 @@
+Database initialized/updated successfully.
+ * Serving Flask app 'app'
+ * Debug mode: on
+INFO:werkzeug:WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+INFO:werkzeug:Press CTRL+C to quit
+INFO:werkzeug: * Restarting with watchdog (windowsapi)
+Database initialized/updated successfully.
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 140-059-159
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:45] "POST /orders/bulk_action HTTP/1.1" 302 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:45] "GET /orders/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:46] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:46] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:49] "POST /orders/bulk_action HTTP/1.1" 302 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:49] "GET /orders/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:49] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:49] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:55] "POST /orders/bulk_action HTTP/1.1" 302 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:55] "GET /orders/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:55] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:55] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:56] "GET /products/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:56] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:56] "GET /static/product_images/placeholder.png HTTP/1.1" 404 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 11:59:56] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:02] "GET /products/delete/1 HTTP/1.1" 302 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:02] "GET /products/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:02] "GET /static/product_images/placeholder.png HTTP/1.1" 404 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:02] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:02] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:05] "GET /products/delete/3 HTTP/1.1" 302 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:05] "GET /products/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:05] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:05] "GET /static/product_images/placeholder.png HTTP/1.1" 404 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:05] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:07] "GET /orders/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:07] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:07] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:10] "POST /orders/bulk_action HTTP/1.1" 302 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:10] "GET /orders/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:11] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:11] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:24] "GET /orders/shipments/manage HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:24] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:24] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:24] "GET /settings/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:24] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:24] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:36] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:37] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:37] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:38] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:38] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:38] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:39] "GET /products/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:39] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:39] "GET /static/product_images/placeholder.png HTTP/1.1" 404 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:39] "GET /static/js/script.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:49] "GET /orders/ HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:49] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [24/Jun/2025 12:00:49] "GET /static/js/script.js HTTP/1.1" 304 -

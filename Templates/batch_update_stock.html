@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}อัปเดตสต็อกสินค้าจำนวนมาก{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">อัปเดตสต็อกสินค้าจำนวนมาก</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('product.batch_update_stock') }}">
+            {% if products %}
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>ชื่อสินค้า</th>
+                            <th>SKU</th>
+                            <th>สต็อกปัจจุบัน</th>
+                            <th>สต็อกใหม่</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.id }}</td>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.sku or '-' }}</td>
+                            <td>{{ product.stock }}</td>
+                            <td>
+                                <input type="number" name="stock_{{ product.id }}" class="form-control" value="{{ product.stock|int }}" min="0">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-sync"></i> อัปเดตสต็อกทั้งหมด</button>
+                <a href="{{ url_for('product.products_list') }}" class="btn btn-secondary btn-lg"><i class="fas fa-arrow-alt-circle-left"></i> ย้อนกลับ</a>
+            </div>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                ไม่พบข้อมูลสินค้าสำหรับอัปเดตสต็อก
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}

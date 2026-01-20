@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}แดชบอร์ดการเงิน{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">แดชบอร์ดการเงิน 📊</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('finance.import_page') }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-file-earmark-arrow-up"></i>
+            นำเข้าไฟล์รายรับ
+        </a>
+    </div>
+</div>
+
+<h4>สรุปภาพรวม</h4>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">รายรับสุทธิ (Net)</h5>
+                <p class="card-text fs-4">{{ "฿{:,.2f}".format(summary['total_net_income'] or 0) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">ค่าธรรมเนียมธุรกรรม</h5>
+                <p class="card-text fs-4">{{ "฿{:,.2f}".format(summary['total_transaction_fee'] or 0) }}</p>
+            </div>
+        </div>
+    </div>
+    </div>
+{% endblock %}

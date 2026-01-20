@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block title %}สร้างคำสั่งซื้อใหม่{% endblock %}
+
+{% block content %}
+{# เพิ่ม data-attribute เพื่อให้ Javascript สามารถสร้าง URL ของรูปภาพได้ #}
+<form method="post" id="order-form" action="{{ url_for('order.create_order_page') }}" 
+      data-product-img-path="{{ url_for('static', filename='uploads/products/') }}">
+      
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-plus-circle me-2"></i> สร้างคำสั่งซื้อ</h2>
+        <div>
+            {# เพิ่ม: ปุ่มล้างข้อมูล #}
+            <button type="button" id="clear-order-btn" class="btn btn-outline-danger me-2"><i class="fas fa-times me-1"></i> ล้างข้อมูล</button>
+            <a href="{{ url_for('order.orders_list') }}" class="btn btn-outline-secondary">ยกเลิก</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> บันทึกคำสั่งซื้อ</button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <h5>1. ข้อมูลลูกค้า</h5>
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body">
+                    <input type="hidden" name="customer_id" id="customer_id">
+                    <div class="mb-3">
+                        <label for="customer_search" class="form-label">ค้นหาลูกค้า (เบอร์โทร / ชื่อ)</label>
+                        <input type="text" class="form-control" id="customer_search" placeholder="พิมพ์เพื่อค้นหา..." autocomplete="off">
+                        <div id="customer-search-results" class="list-group position-absolute w-100 mt-1" style="z-index: 1000;"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">ชื่อ-นามสกุล</label>
+                        <input type="text" class="form-control" name="first_name" id="first_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">เบอร์โทรศัพท์</label>
+                        <input type="text" class="form-control" name="phone" id="phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">ที่อยู่</label>
+                        <textarea class="form-control" name="address" id="address" rows="3" required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            {# เพิ่ม: ส่วนสำหรับบันทึกโน้ต #}
+            <h5>บันทึกภายใน (Optional)</h5>
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <textarea class="form-control" name="order_notes" id="order_notes" rows="3" placeholder="เช่น ลูกค้าขอห่อของขวัญ, ต้องการใบกำกับภาษี..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <h5>2. รายการสินค้า</h5>
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body position-relative">
+                    <label for="product_search" class="form-label">ค้นหาสินค้า (SKU / ชื่อ)</label>
+                    <input type="text" class="form-control" id="product_search" placeholder="พิมพ์อย่างน้อย 2 ตัวอักษร..." autocomplete="off">
+                    <div id="product-search-results" class="list-group position-absolute w-100 mt-1" style="z-index: 1000;"></div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    {# เพิ่ม: คอลัมน์รูปภาพ #}
+                                    <th style="width: 5%;"></th>
+                                    <th>สินค้า</th>
+                                    <th style="width: 15%;">จำนวน</th>
+                                    <th style="width: 20%;" class="text-end">ราคา/หน่วย</th>
+                                    {# เพิ่ม: คอลัมน์ส่วนลดรายสินค้า #}
+                                    <th style="width: 15%;" class="text-end">ส่วนลด</th>
+                                    <th style="width: 15%;" class="text-end">ราคารวม</th>
+                                    <th style="width: 5%;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="order-items-table">
+                                <tr><td colspan="7" class="text-center text-muted">ยังไม่มีสินค้าในรายการ</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <hr>
+                    <div class="row justify-content-end">
+                        <div class="col-md-8 col-lg-7">
+                            <dl class="row align-items-center mb-1">
+                                <dt class="col-6">ยอดรวมสินค้า</dt>
+                                <dd class="col-6 text-end" id="summary-subtotal">0.00</dd>
+
+                                <dt class="col-6">ส่วนลดท้ายบิล (บาท)</dt>
+                                <dd class="col-6 text-end">
+                                    <input type="number" step="0.01" class="form-control form-control-sm text-end" id="order-discount" name="order_discount" value="0" min="0">
+                                </dd>
+
+                                <dt class="col-6">ค่าจัดส่ง</dt>
+                                <dd class="col-6 text-end">
+                                    <input type="number" step="0.01" class="form-control form-control-sm text-end" id="shipping-fee" name="shipping_fee" value="0" min="0">
+                                </dd>
+
+                                <dt class="col-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="apply_vat" id="apply-vat">
+                                        <label class="form-check-label" for="apply-vat">ภาษี (7%)</label>
+                                    </div>
+                                </dt>
+                                <dd class="col-6 text-end" id="summary-tax">0.00</dd>
+                            </dl>
+                            <hr>
+                            <dl class="row fs-5 align-items-center">
+                                <dt class="col-6"><strong>ยอดรวมสุทธิ</strong></dt>
+                                <dd class="col-6 text-end"><strong id="grand-total">0.00</strong></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- State & Element Variables ---
+    let orderItems = {};
+    const form = document.getElementById('order-form');
+    const productSearchInput = document.getElementById('product_search');
+    const productSearchResults = document.getElementById('product-search-results');
+    const customerSearchInput = document.getElementById('customer_search');
+    const customerSearchResults = document.getElementById('customer-search-results');
+    const orderItemsTable = document.getElementById('order-items-table');
+    const clearOrderBtn = document.getElementById('clear-order-btn');
+    
+    // Summary elements
+    const summarySubtotalEl = document.getElementById('summary-subtotal');
+    const discountInput = document.getElementById('order-discount');
+    const shippingInput = document.getElementById('shipping-fee');
+    const applyVatCheckbox = document.getElementById('apply-vat');
+    const summaryTaxEl = document.getElementById('summary-tax');
+    const grandTotalEl = document.getElementById('grand-total');
+
+    const PRODUCT_IMG_PATH = form.dataset.productImgPath || '/static/uploads/products/';
+
+    // --- Autocomplete Logic ---
+    async function setupAutocomplete(inputEl, resultsContainer, apiUrl, onSelect) {
+        inputEl.addEventListener('input', async function() {
+            const query = this.value;
+            if (query.length < 2 && inputEl.id !== 'customer_search') {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+            try {
+                const response = await fetch(`${apiUrl}?q=${query}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                displayResults(data, resultsContainer, onSelect, query);
+            } catch (error) {
+                console.error('Search error:', error);
+                resultsContainer.innerHTML = '<a href="#" class="list-group-item list-group-item-action disabled">เกิดข้อผิดพลาดในการค้นหา</div>';
+            }
+        });
+    }
+
+    function displayResults(data, container, onSelect, query) {
+        container.innerHTML = '';
+        if (data.length === 0) {
+            // เพิ่ม: สร้างลูกค้าใหม่จากผลการค้นหา
+            if (container.id === 'customer-search-results' && query) {
+                const a = document.createElement('a');
+                a.href = '#';
+                a.className = 'list-group-item list-group-item-action list-group-item-success';
+                a.innerHTML = `<i class="fas fa-user-plus me-2"></i> สร้างลูกค้าใหม่ด้วยข้อมูล: "${query}"`;
+                a.addEventListener('click', e => {
+                    e.preventDefault();
+                    document.getElementById('phone').value = query; // สมมติว่าค้นหาด้วยเบอร์โทร
+                    container.innerHTML = '';
+                });
+                container.appendChild(a);
+            } else {
+                 container.innerHTML = '<a href="#" class="list-group-item list-group-item-action disabled">ไม่พบข้อมูล</div>';
+            }
+            return;
+        }
+
+        data.forEach(item => {
+            const a = document.createElement('a');
+            a.href = '#';
+            a.className = `list-group-item list-group-item-action ${item.stock <= 0 ? 'disabled' : ''}`;
+            
+            if (item.sku) { // Product
+                const imgUrl = PRODUCT_IMG_PATH + (item.image_filename || 'placeholder.png');
+                a.innerHTML = `
+                    <div class="d-flex w-100 align-items-center">
+                        <img src="${imgUrl}" style="width: 40px; height: 40px; object-fit: cover;" class="me-3">
+                        <div class="flex-grow-1">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${item.name}</h6>
+                                <small>คงเหลือ: ${item.stock}</small>
+                            </div>
+                            <p class="mb-1 small text-muted">SKU: ${item.sku}</p>
+                        </div>
+                        ${item.stock <= 0 ? '<span class="badge bg-danger">สินค้าหมด</span>' : ''}
+                    </div>`;
+            } else { // Customer
+                a.innerHTML = `<h6 class="mb-1">${item.first_name}</h6><p class="mb-1 small text-muted">${item.phone}</p>`;
+            }
+
+            if (item.stock > 0 || !item.sku) {
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    onSelect(item);
+                    container.innerHTML = '';
+                    // ไม่ล้างค่าช่องค้นหาทันที
+                    // inputEl.value = ''; 
+                });
+            }
+            container.appendChild(a);
+        });
+    }
+
+    setupAutocomplete(productSearchInput, productSearchResults, `{{ url_for('order.search_products_api') }}`, addProductToOrder);
+    setupAutocomplete(customerSearchInput, customerSearchResults, `{{ url_for('order.search_customers_api') }}`, selectCustomer);
+
+    function selectCustomer(customer) {
+        document.getElementById('customer_id').value = customer.id;
+        document.getElementById('first_name').value = customer.first_name;
+        document.getElementById('phone').value = customer.phone;
+        document.getElementById('address').value = customer.address;
+        customerSearchInput.value = '';
+    }
+
+    // --- Order Item Logic ---
+    function addProductToOrder(product) {
+        if (orderItems[product.id]) {
+            orderItems[product.id].quantity++;
+        } else {
+            // เพิ่ม: discount สำหรับรายสินค้า
+            orderItems[product.id] = { data: product, quantity: 1, price: product.price, discount: 0 };
+        }
+        renderTable();
+    }
+
+    function renderTable() {
+        if (Object.keys(orderItems).length === 0) {
+            orderItemsTable.innerHTML = '<tr><td colspan="7" class="text-center text-muted">ยังไม่มีสินค้าในรายการ</td></tr>';
+        } else {
+            orderItemsTable.innerHTML = '';
+            for (const productId in orderItems) {
+                const item = orderItems[productId];
+                const lineTotal = (item.quantity * item.price) - item.discount;
+                const imgUrl = PRODUCT_IMG_PATH + (item.data.image_filename || 'placeholder.png');
+                const row = document.createElement('tr');
+
+                // ปรับปรุง: เพิ่มคอลัมน์รูปภาพ และ ส่วนลด
+                row.innerHTML = `
+                    <td><img src="${imgUrl}" style="width: 50px; height: 50px; object-fit: cover;"></td>
+                    <td>
+                        <input type="hidden" name="product_ids[]" value="${item.data.id}">
+                        <p class="mb-0">${item.data.name}</p>
+                        <small class="text-muted">SKU: ${item.data.sku}</small>
+                    </td>
+                    <td><input type="number" class="form-control form-control-sm quantity-input" name="quantities[]" value="${item.quantity}" min="1" max="${item.data.stock}" data-id="${productId}"></td>
+                    <td class="text-end"><input type="number" step="0.01" class="form-control form-control-sm text-end price-input" name="prices[]" value="${item.price.toFixed(2)}" data-id="${productId}"></td>
+                    <td class="text-end"><input type="number" step="0.01" class="form-control form-control-sm text-end line-discount-input" name="line_discounts[]" value="${item.discount.toFixed(2)}" data-id="${productId}" min="0"></td>
+                    <td class="text-end" id="subtotal-${productId}">${lineTotal.toFixed(2)}</td>
+                    <td><button type="button" class="btn btn-sm btn-outline-danger remove-item-btn" data-id="${productId}" title="ลบรายการ">&times;</button></td>
+                `;
+                orderItemsTable.appendChild(row);
+            }
+        }
+        updateSummary();
+    }
+    
+    function updateSummary() {
+        let subtotal = 0;
+        for (const productId in orderItems) {
+            const item = orderItems[productId];
+            // ปรับปรุง: คำนวณยอดรวมจากราคาสินค้าลบด้วยส่วนลดรายสินค้า
+            subtotal += (item.quantity * item.price) - item.discount;
+        }
+        summarySubtotalEl.textContent = subtotal.toFixed(2);
+
+        const orderDiscount = parseFloat(discountInput.value) || 0;
+        const shipping = parseFloat(shippingInput.value) || 0;
+        const subtotalAfterDiscount = subtotal - orderDiscount;
+        
+        let tax = 0;
+        if (applyVatCheckbox.checked) {
+            tax = subtotalAfterDiscount > 0 ? subtotalAfterDiscount * 0.07 : 0;
+        }
+        summaryTaxEl.textContent = tax.toFixed(2);
+        
+        const grandTotal = subtotalAfterDiscount + shipping + tax;
+        grandTotalEl.textContent = grandTotal.toFixed(2);
+    }
+    
+    // --- Event Delegation & Handlers ---
+    orderItemsTable.addEventListener('input', function(e) {
+        const target = e.target;
+        const productId = target.dataset.id;
+        if (!productId) return;
+
+        if (target.matches('.quantity-input')) {
+            orderItems[productId].quantity = parseInt(target.value, 10) || 1;
+        }
+        if (target.matches('.price-input')) {
+            orderItems[productId].price = parseFloat(target.value) || 0;
+        }
+        // เพิ่ม: จัดการส่วนลดรายสินค้า
+        if (target.matches('.line-discount-input')) {
+            orderItems[productId].discount = parseFloat(target.value) || 0;
+        }
+        
+        const item = orderItems[productId];
+        const lineTotal = (item.quantity * item.price) - item.discount;
+        document.getElementById(`subtotal-${productId}`).textContent = lineTotal.toFixed(2);
+        updateSummary();
+    });
+
+    orderItemsTable.addEventListener('click', function(e) {
+        if (e.target.matches('.remove-item-btn')) {
+            delete orderItems[e.target.dataset.id];
+            renderTable();
+        }
+    });
+    
+    // เพิ่ม: ปุ่มล้างข้อมูล
+    clearOrderBtn.addEventListener('click', function() {
+        if (confirm('คุณต้องการล้างข้อมูลคำสั่งซื้อทั้งหมดในหน้านี้ใช่หรือไม่?')) {
+            orderItems = {};
+            document.getElementById('customer_id').value = '';
+            document.getElementById('order-form').reset();
+            renderTable();
+        }
+    });
+
+    discountInput.addEventListener('input', updateSummary);
+    shippingInput.addEventListener('input', updateSummary);
+    applyVatCheckbox.addEventListener('change', updateSummary);
+
+    document.addEventListener('click', function(e) {
+        if (!productSearchInput.contains(e.target) && !productSearchResults.contains(e.target)) {
+            productSearchResults.innerHTML = '';
+        }
+        if (!customerSearchInput.contains(e.target) && !customerSearchResults.contains(e.target)) {
+            customerSearchResults.innerHTML = '';
+        }
+    });
+});
+</script>
+{% endblock %}

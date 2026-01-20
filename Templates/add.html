@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}เพิ่มลูกค้าใหม่{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">เพิ่มลูกค้าใหม่</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('customer.add_customer') }}">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="first_name" class="form-label">ชื่อ:</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="last_name" class="form-label">นามสกุล:</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">อีเมล:</label>
+                <input type="email" class="form-control" id="email" name="email">
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">เบอร์โทรศัพท์:</label>
+                <input type="tel" class="form-control" id="phone" name="phone">
+            </div>
+            <div class="mb-3">
+                <label for="address" class="form-label">ที่อยู่:</label>
+                <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="date_of_birth" class="form-label">วันเกิด:</label>
+                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth">
+            </div>
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save"></i> บันทึก</button>
+                <a href="{{ url_for('customer.index') }}" class="btn btn-secondary btn-lg"><i class="fas fa-arrow-alt-circle-left"></i> ย้อนกลับ</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

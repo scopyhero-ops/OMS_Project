@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}ลูกค้า{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="fas fa-users me-2"></i> รายการลูกค้า</h2>
+    <a href="{{ url_for('customer.add_customer') }}" class="btn btn-dark"> <i class="fas fa-plus"></i> เพิ่มลูกค้าใหม่
+    </a>
+</div>
+
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <form action="{{ url_for('customer.index') }}" method="get" class="d-flex">
+                <input type="text" name="q" class="form-control" placeholder="ค้นหาลูกค้า..." value="{{ keyword }}">
+                <button type="submit" class="btn btn-outline-secondary ms-2"><i class="fas fa-search"></i></button>
+            </form>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('customer.export') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-download"></i> ส่งออก CSV
+                </a>
+                <a href="{{ url_for('customer.import_customers') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-upload"></i> นำเข้า CSV
+                </a>
+            </div>
+        </div>
+
+        {% if customers %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>ข้อมูลติดต่อ</th>
+                        <th class="text-center">วันที่สร้าง</th>
+                        <th class="text-end">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>{{ customer.id }}</td>
+                        <td>{{ customer.first_name }} {{ customer.last_name }}</td>
+                        <td>
+                            {% if customer.email %}<div class="small text-muted"><i class="fas fa-envelope fa-fw me-2"></i>{{ customer.email }}</div>{% endif %}
+                            {% if customer.phone %}<div class="small text-muted"><i class="fas fa-phone fa-fw me-2"></i>{{ customer.phone }}</div>{% endif %}
+                        </td>
+                        <td class="text-center">{{ customer.created_at.split('T')[0] }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('customer.edit_customer', id=customer.id) }}" class="btn btn-secondary btn-sm me-1" title="แก้ไข">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('customer.delete_customer', id=customer.id) }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('คุณแน่ใจหรือไม่ที่ต้องการลบลูกค้ารายนี้?');" title="ลบ">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-light text-center" role="alert">
+            <i class="fas fa-info-circle me-2"></i> ไม่พบข้อมูลลูกค้า
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

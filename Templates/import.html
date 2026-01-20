@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}นำเข้าข้อมูลลูกค้า{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">นำเข้าข้อมูลลูกค้าจาก CSV</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <p class="text-muted">โปรดอัปโหลดไฟล์ CSV ที่มีรูปแบบคอลัมน์ดังนี้: <br>
+            `ชื่อ, นามสกุล, อีเมล, เบอร์โทร, ที่อยู่, วันเกิด (YYYY-MM-DD)`
+            <br>โดยไม่จำเป็นต้องมีแถวหัวตาราง (Header)
+        </p>
+        <form method="POST" action="{{ url_for('customer.import_customers') }}" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="file" class="form-label">เลือกไฟล์ CSV:</label>
+                <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+            </div>
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-upload"></i> นำเข้า</button>
+                <a href="{{ url_for('customer.index') }}" class="btn btn-secondary btn-lg"><i class="fas fa-arrow-alt-circle-left"></i> ย้อนกลับ</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

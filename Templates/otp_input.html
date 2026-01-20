@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}กรอกรหัส OTP{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-light text-dark text-center">
+                <h4 class="mb-0"><i class="fas fa-key me-2"></i>ยืนยันตัวตนสำหรับ {{ platform.upper() }}</h4>
+            </div>
+            <div class="card-body p-4">
+                {% if success %}
+                <div class="alert alert-success text-center">
+                    <h5>บันทึกรหัสสำเร็จ!</h5>
+                    <p>ระบบกำลังดำเนินการต่ออัตโนมัติ คุณสามารถปิดหน้านี้ได้</p>
+                </div>
+                {% else %}
+                <p class="text-center text-muted">ระบบอัตโนมัติกำลังรอรหัสยืนยัน (OTP) จากคุณ กรุณากรอกรหัส 6 หลักที่ได้รับ</p>
+                <form method="POST" action="{{ url_for('automation.otp_input') }}">
+                    <input type="hidden" name="platform" value="{{ platform }}">
+                    <div class="mb-3">
+                        <label for="otp_code" class="form-label">รหัส OTP 6 หลัก:</label>
+                        <input type="text" class="form-control form-control-lg text-center"
+                               id="otp_code" name="otp_code"
+                               required
+                               maxlength="6"
+                               pattern="\d{6}"
+                               oninput="this.value=this.value.replace(/[^0-9]/g,'');"
+                               autocomplete="one-time-code"
+                               autofocus>
+                    </div>
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-dark btn-lg"><i class="fas fa-paper-plane me-2"></i>ส่งรหัส OTP</button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

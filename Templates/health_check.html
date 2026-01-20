@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Data Health Check{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-heartbeat me-2"></i> ตรวจสอบสุขภาพข้อมูล</h2>
+<p class="text-muted">หน้านี้ใช้สำหรับตรวจสอบความถูกต้องของการเชื่อมโยงข้อมูลระหว่าง Orders, Order Items, และ Products</p>
+
+{% for order in orders_data %}
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <strong>Order ID: {{ order.id }}</strong> (Tracking: {{ order.tracking_no }})
+    </div>
+    <div class="card-body">
+        {% if order.items_list %}
+            <table class="table table-sm table-bordered">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Item ID</th>
+                        <th>Product ID ที่บันทึกไว้</th>
+                        <th>ผลการค้นหาสินค้า</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items_list %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.product_id }}</td>
+                        <td>
+                            {% if item.product_found %}
+                                <div class="alert alert-success p-2 mb-0">
+                                    <i class="fas fa-check-circle me-2"></i><strong>พบข้อมูล:</strong> {{ item.product_found.name }} (SKU: {{ item.product_found.sku }})
+                                </div>
+                            {% else %}
+                                <div class="alert alert-danger p-2 mb-0">
+                                    <i class="fas fa-times-circle me-2"></i><strong>ผิดพลาด:</strong> ไม่พบสินค้า ID {{ item.product_id }} ในตาราง products!
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+        <p class="text-muted">ไม่พบรายการสินค้าสำหรับออเดอร์นี้</p>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">ไม่พบข้อมูลออเดอร์ในระบบ (กรุณาลองนำเข้าไฟล์ออเดอร์ก่อน)</div>
+{% endfor %}
+
+{% endblock %}

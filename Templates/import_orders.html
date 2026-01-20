@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}นำเข้าคำสั่งซื้อ{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">นำเข้าคำสั่งซื้อจากไฟล์</h2>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-file-upload"></i> อัปโหลดไฟล์ Report</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('order.import_orders') }}" enctype="multipart/form-data">
+                    
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label for="platform" class="form-label">เลือกแพลตฟอร์ม:</label>
+                        <select name="platform" id="platform" class="form-select">
+                            <option value="tiktok">TikTok Shop</option>
+                            <option value="shopee">Shopee</option>
+                            <option value="lazada">Lazada</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="file" class="form-label">เลือกไฟล์ Report (.csv หรือ .xlsx):</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv, .xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" required>
+                    </div>
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-upload"></i> เริ่มนำเข้าข้อมูล</button>
+                        <a href="{{ url_for('order.orders_list') }}" class="btn btn-secondary"><i class="fas fa-times-circle"></i> ยกเลิก</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="accordion" id="manualAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        <strong><i class="fas fa-book-open me-2"></i> ขั้นตอนการดาวน์โหลดและนำเข้าไฟล์</strong>
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#manualAccordion">
+                    <div class="accordion-body">
+                        <ol>
+                            <li class="mb-2">
+                                <strong>เข้าสู่ระบบ Seller Center</strong><br>
+                                <span class="text-muted small">เข้าสู่ระบบหลังร้านของแพลตฟอร์มที่คุณต้องการ (TikTok, Shopee, Lazada)</span>
+                            </li>
+                            <li class="mb-2">
+                                <strong>ไปที่หน้าจัดการคำสั่งซื้อ</strong><br>
+                                <span class="text-muted small">มองหาเมนู "คำสั่งซื้อ" หรือ "Orders" และไปที่หน้ารายการออเดอร์</span>
+                            </li>
+                            <li class="mb-2">
+                                <strong>ส่งออกรายงาน (Export)</strong><br>
+                                <span class="text-muted small">มองหาปุ่ม "ส่งออก" หรือ "Export" แล้วเลือกช่วงเวลาที่ต้องการ</span>
+                            </li>
+                            <li class="mb-2">
+                                <strong>อัปโหลดไฟล์ที่นี่</strong><br>
+                                <span class="text-muted small">เลือกแพลตฟอร์มให้ถูกต้อง แล้วนำไฟล์ที่ดาวน์โหลดมาอัปโหลดในช่องด้านซ้าย</span>
+                            </li>
+                        </ol>
+                         <hr>
+                        <div class="alert alert-secondary p-2 small">
+                            <i class="fas fa-info-circle"></i> <strong>ข้อควรรู้:</strong> ระบบจะตรวจสอบจาก Tracking Number และเบอร์โทรศัพท์ เพื่อข้ามรายการซ้ำและเชื่อมโยงลูกค้าเก่าให้โดยอัตโนมัติ
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

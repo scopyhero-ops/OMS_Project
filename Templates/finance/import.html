@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}นำเข้าไฟล์รายรับ{% endblock %}
+
+{% block content %}
+<h1 class="h2">นำเข้าไฟล์รายรับ</h1>
+<p>อัปโหลดไฟล์สรุปรายรับ (Income Report) ที่ดาวน์โหลดจากแพลตฟอร์ม</p>
+
+<div class="card">
+    <div class="card-body">
+        <form action="{{ url_for('finance.handle_import') }}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="mb-3">
+                <label for="financial_report" class="form-label">เลือกไฟล์ (.xlsx หรือ .csv)</label>
+                <input class="form-control" type="file" id="financial_report" name="financial_report" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-upload"></i> อัปโหลดและประมวลผล
+            </button>
+            <a href="{{ url_for('finance.dashboard') }}" class="btn btn-secondary">ยกเลิก</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

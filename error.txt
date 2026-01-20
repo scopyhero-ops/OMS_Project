@@ -1,0 +1,88 @@
+ * Serving Flask app 'app'
+ * Debug mode: on
+INFO:werkzeug:WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+INFO:werkzeug:Press CTRL+C to quit
+INFO:werkzeug: * Restarting with watchdog (windowsapi)
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 140-059-159
+INFO:werkzeug:127.0.0.1 - - [21/Jun/2025 15:15:42] "GET / HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\PS63\Desktop\sqlite-tools-win-x64-3500100\routes\auth.py", line 47, in wrapped_view
+    return view(**kwargs)
+  File "C:\Users\PS63\Desktop\sqlite-tools-win-x64-3500100\routes\customer.py", line 33, in index
+    return render_template('index.html', customers=customers, keyword=keyword)
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\PS63\Desktop\sqlite-tools-win-x64-3500100\templates\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\PS63\Desktop\sqlite-tools-win-x64-3500100\templates\base.html", line 81, in top-level template code
+    <p>&copy; {{ datetime.now().year }} ระบบจัดการร้านค้า. All rights reserved.</p>
+    ^^^^^^^^^^^^^
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\jinja2\environment.py", line 490, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'datetime' is undefined
+INFO:werkzeug:127.0.0.1 - - [21/Jun/2025 15:15:42] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [21/Jun/2025 15:15:42] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [21/Jun/2025 15:15:42] "GET /?__debugger__=yes&cmd=resource&f=console.png&s=CUsUaG5Z6xfhQimVvniG HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [21/Jun/2025 15:15:45] "GET / HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\PS63\Desktop\sqlite-tools-win-x64-3500100\routes\auth.py", line 47, in wrapped_view
+    return view(**kwargs)
+  File "C:\Users\PS63\Desktop\sqlite-tools-win-x64-3500100\routes\customer.py", line 33, in index
+    return render_template('index.html', customers=customers, keyword=keyword)
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\PS63\Desktop\sqlite-tools-win-x64-3500100\templates\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\PS63\Desktop\sqlite-tools-win-x64-3500100\templates\base.html", line 81, in top-level template code
+    <p>&copy; {{ datetime.now().year }} ระบบจัดการร้านค้า. All rights reserved.</p>
+    ^^^^^^^^^^^^^
+  File "C:\Users\PS63\AppData\Local\Programs\Python\Python313\Lib\site-packages\jinja2\environment.py", line 490, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'datetime' is undefined
+INFO:werkzeug:127.0.0.1 - - [21/Jun/2025 15:15:45] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [21/Jun/2025 15:15:45] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 304 -
+INFO:werkzeug:127.0.0.1 - - [21/Jun/2025 15:15:45] "GET /?__debugger__=yes&cmd=resource&f=console.png&s=CUsUaG5Z6xfhQimVvniG HTTP/1.1" 304 -

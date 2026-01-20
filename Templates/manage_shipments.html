@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}จัดการการจัดส่ง{% endblock %}
+
+{% block content %}
+<form id="batch-process-form" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-truck me-2"></i> จัดการการจัดส่ง (<span id="order-count">{{ orders|length }}</span>)</h2>
+        <div id="action-buttons-group" class="d-none">
+             <button type="submit" id="submit-button" class="btn btn-dark btn-lg">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                <i class="fas fa-print me-2"></i>
+                <span id="button-text">พิมพ์ใบปะหน้า และอัปเดตสถานะ</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="py-3 px-3" style="width: 5%;"><input class="form-check-input" type="checkbox" id="select-all-checkbox"></th>
+                            <th class="py-3">Order ID</th>
+                            <th class="py-3">ลูกค้า</th>
+                            <th class="py-3">วันที่สั่งซื้อ</th>
+                            <th class="py-3">Tracking No.</th>
+                            <th class="py-3 text-end pe-3">ยอดรวม</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        {% if orders %}
+                            {% for order in orders %}
+                            <tr id="order-row-{{ order.id }}">
+                                <td class="px-3"><input class="form-check-input order-checkbox" type="checkbox" name="selected_orders" value="{{ order.id }}"></td>
+                                <td><a href="{{ url_for('order.view_order', id=order.id) }}" target="_blank">#{{ order.id }}</a></td>
+                                <td>{{ order.customer_name }}</td>
+                                <td>{{ datetime.fromisoformat(order.order_date).strftime('%d %b %Y %H:%M') }}</td>
+                                <td>{{ order.tracking_no or 'ยังไม่สร้าง' }}</td>
+                                <td class="text-end pe-3">{{ "%.2f"|format(order.total_amount) }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr id="no-orders-row"><td colspan="6" class="text-center text-muted py-5">ไม่มีออเดอร์ที่ต้องดำเนินการจัดส่งในขณะนี้</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('batch-process-form');
+        const submitButton = document.getElementById('submit-button');
+        const actionButtonsGroup = document.getElementById('action-buttons-group');
+        const orderCountSpan = document.getElementById('order-count');
+        const tableBody = document.getElementById('orders-table-body');
+        const noOrdersRowHTML = `<tr id="no-orders-row"><td colspan="6" class="text-center text-muted py-5">ไม่มีออเดอร์ที่ต้องดำเนินการจัดส่งในขณะนี้</td></tr>`;
+
+        if (!form || !submitButton) return;
+
+        const buttonText = document.getElementById('button-text');
+        const spinner = submitButton.querySelector('.spinner-border');
+        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        const orderCheckboxes = () => document.querySelectorAll('.order-checkbox');
+
+        function updateUIState() {
+            const checkedCount = document.querySelectorAll('.order-checkbox:checked').length;
+            const totalCount = orderCheckboxes().length;
+            actionButtonsGroup.classList.toggle('d-none', checkedCount === 0);
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = (totalCount > 0 && checkedCount === totalCount);
+            }
+        }
+
+        if(selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', () => {
+                orderCheckboxes().forEach(checkbox => { checkbox.checked = selectAllCheckbox.checked; });
+                updateUIState();
+            });
+        }
+        
+        tableBody.addEventListener('change', (e) => {
+            if (e.target.classList.contains('order-checkbox')) {
+                updateUIState();
+            }
+        });
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const selectedOrders = formData.getAll('selected_orders');
+
+            if (selectedOrders.length === 0) {
+                alert('กรุณาเลือกอย่างน้อย 1 รายการ'); return;
+            }
+
+            submitButton.disabled = true;
+            spinner.style.display = 'inline-block';
+            buttonText.textContent = 'กำลังสร้าง PDF...';
+            
+            fetch("{{ url_for('order.process_batch_shipments') }}", { method: 'POST', body: formData })
+            .then(response => {
+                if (response.ok) return response.blob();
+                return response.json().then(err => { throw new Error(err.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ') });
+            })
+            .then(blob => {
+                const pdfUrl = URL.createObjectURL(blob);
+
+                // สร้าง iFrame ที่ซ่อนอยู่เพื่อเริ่มการพิมพ์
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = pdfUrl;
+                document.body.appendChild(iframe);
+
+                // รอให้ PDF โหลดใน iframe แล้วสั่งพิมพ์
+                iframe.onload = function() {
+                    try {
+                        iframe.contentWindow.print();
+                    } catch (e) {
+                        // ถ้าเกิดปัญหา (เช่น cross-origin) ให้เปิดในแท็บใหม่แทน
+                        window.open(pdfUrl, '_blank');
+                    }
+                };
+                
+                // อัปเดต UI หลังจากส่งคำขอ
+                selectedOrders.forEach(orderId => document.getElementById(`order-row-${orderId}`)?.remove());
+                const newCount = orderCheckboxes().length;
+                orderCountSpan.textContent = newCount;
+                if (newCount === 0) tableBody.innerHTML = noOrdersRowHTML;
+                
+                // ยกเลิกการเลือกทั้งหมด
+                if(selectAllCheckbox) selectAllCheckbox.checked = false;
+            })
+            .catch(error => alert(`เกิดข้อผิดพลาด: ${error.message}`))
+            .finally(() => {
+                submitButton.disabled = false;
+                spinner.style.display = 'none';
+                buttonText.textContent = 'พิมพ์ใบปะหน้า และอัปเดตสถานะ';
+                updateUIState();
+            });
+        });
+        updateUIState();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}แก้ไขข้อมูลสินค้า{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="fas fa-edit me-2"></i> แก้ไขข้อมูลสินค้า: {{ product.name }}</h2>
+     <a href="{{ url_for('product.products_list') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>ย้อนกลับ</a>
+</div>
+
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs" id="editProductTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-pane" type="button" role="tab" aria-controls="edit-pane" aria-selected="true">
+            <i class="fas fa-pencil-alt me-1"></i> แก้ไขข้อมูลหลัก
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="reference-tab" data-bs-toggle="tab" data-bs-target="#reference-pane" type="button" role="tab" aria-controls="reference-pane" aria-selected="false">
+            <i class="fas fa-tags me-1"></i> ตารางอ้างอิง
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="editProductTabContent">
+    
+    <!-- 1. Edit Form Pane -->
+    <div class="tab-pane fade show active" id="edit-pane" role="tabpanel" aria-labelledby="edit-tab" tabindex="0">
+        <div class="card shadow-sm border-top-0 rounded-0 rounded-bottom">
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('product.edit_product', id=product.id) }}" enctype="multipart/form-data" id="edit-product-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">ชื่อสินค้า:</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ product.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">รายละเอียด:</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ product.description }}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="cost" class="form-label">ต้นทุน (บาท):</label>
+                            <input type="number" class="form-control" id="cost" name="cost" value="{{ '%.2f'|format(product.cost|float) }}" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="price" class="form-label">ราคาขาย (บาท):</label>
+                            <input type="number" class="form-control" id="price" name="price" value="{{ '%.2f'|format(product.price) }}" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="stock" class="form-label">สต็อก:</label>
+                            <input type="number" class="form-control" id="stock" name="stock" value="{{ product.stock }}" min="0" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="sku" class="form-label">SKU (รหัสสินค้า):</label>
+                            <input type="text" class="form-control" id="sku" name="sku" value="{{ product.sku or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">หมวดหมู่:</label>
+                            <input type="text" class="form-control" id="category" name="category" list="category_suggestions" value="{{ product.category or '' }}">
+                            <datalist id="category_suggestions">
+                                {% for cat in existing_categories %}
+                                <option value="{{ cat }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">รูปภาพสินค้าปัจจุบัน:</label>
+                        <div>
+                            <img src="{{ url_for('static', filename='product_images/' + (product.image_filename or 'placeholder.png')) }}" alt="{{ product.name }}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;" class="mb-2">
+                        </div>
+                        <label for="image_file" class="form-label">เปลี่ยนรูปภาพ:</label>
+                        <input type="file" class="form-control" id="image_file" name="image_file" accept="image/png, image/jpeg, image/jpg, image/gif">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Cost Reference Pane -->
+    <div class="tab-pane fade" id="reference-pane" role="tabpanel" aria-labelledby="reference-tab" tabindex="0">
+        <div class="card shadow-sm border-top-0 rounded-0 rounded-bottom">
+            <div class="card-body">
+                <div class="accordion" id="costReferenceAccordion">
+                    <!-- Forever แขนสั้น -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingForever"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseForever"><i class="fas fa-tshirt me-2 text-primary"></i><strong>Forever แขนสั้น</strong></button></h2>
+                        <div id="collapseForever" class="accordion-collapse collapse" data-bs-parent="#costReferenceAccordion">
+                            <div class="accordion-body p-0"><table class="table table-sm table-bordered mb-0"><tbody><tr> <td>S</td> <td class="text-end">58.-</td> </tr><tr> <td>M</td> <td class="text-end">63.-</td> </tr><tr> <td>L</td> <td class="text-end">73.-</td> </tr><tr> <td>XL</td> <td class="text-end">78.-</td> </tr><tr> <td>2XL</td> <td class="text-end">103.-</td> </tr><tr> <td>3XL</td> <td class="text-end">133.-</td> </tr><tr> <td>4XL</td> <td class="text-end">163.-</td> </tr></tbody></table></div>
+                        </div>
+                    </div>
+                    <!-- แขนยาว -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingLongsleeve"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLongsleeve"><i class="fas fa-user-tie me-2 text-success"></i><strong>แขนยาว</strong></button></h2>
+                        <div id="collapseLongsleeve" class="accordion-collapse collapse" data-bs-parent="#costReferenceAccordion">
+                            <div class="accordion-body p-0"><table class="table table-sm table-bordered mb-0"><tbody><tr> <td>S</td> <td class="text-end">68.-</td> </tr><tr> <td>M</td> <td class="text-end">78.-</td> </tr><tr> <td>L</td> <td class="text-end">88.-</td> </tr><tr> <td>XL</td> <td class="text-end">98.-</td> </tr><tr> <td>2XL</td> <td class="text-end">128.-</td> </tr></tbody></table></div>
+                        </div>
+                    </div>
+                    <!-- Polo -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingPolo"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePolo"><i class="fas fa-tshirt me-2 text-info"></i><strong>Polo</strong></button></h2>
+                        <div id="collapsePolo" class="accordion-collapse collapse" data-bs-parent="#costReferenceAccordion">
+                            <div class="accordion-body p-0"><table class="table table-sm table-bordered mb-0"><tbody><tr> <td>XXS, XS, S</td> <td class="text-end">105.-</td> </tr><tr> <td>M</td> <td class="text-end">115.-</td> </tr><tr> <td>L</td> <td class="text-end">125.-</td> </tr><tr> <td>XL</td> <td class="text-end">135.-</td> </tr><tr> <td>2XL</td> <td class="text-end">145.-</td> </tr></tbody></table></div>
+                        </div>
+                    </div>
+                    <!-- Oversize แขนสั้น -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOversize"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOversize"><i class="fas fa-tshirt me-2 text-warning"></i><strong>Oversize แขนสั้น</strong></button></h2>
+                        <div id="collapseOversize" class="accordion-collapse collapse" data-bs-parent="#costReferenceAccordion">
+                            <div class="accordion-body p-0"><table class="table table-sm table-bordered mb-0"><tbody><tr> <td>M</td> <td class="text-end">98.-</td> </tr><tr> <td>L</td> <td class="text-end">108.-</td> </tr><tr> <td>XL</td> <td class="text-end">118.-</td> </tr><tr> <td>2XL</td> <td class="text-end">138.-</td> </tr><tr> <td>Freesize</td> <td class="text-end">98.-</td> </tr></tbody></table></div>
+                        </div>
+                    </div>
+                    <!-- Sweater OVS -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingSweater"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSweater"><i class="fas fa-tshirt me-2 text-danger"></i><strong>Sweater OVS</strong></button></h2>
+                        <div id="collapseSweater" class="accordion-collapse collapse" data-bs-parent="#costReferenceAccordion">
+                            <div class="accordion-body p-0"><table class="table table-sm table-bordered mb-0"><tbody><tr> <td>S</td> <td class="text-end">108.-</td> </tr><tr> <td>M</td> <td class="text-end">113.-</td> </tr><tr> <td>L</td> <td class="text-end">118.-</td> </tr><tr> <td>XL</td> <td class="text-end">123.-</td> </tr></tbody></table></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Save Button outside the tabs -->
+<div class="d-grid mt-4">
+    <button type="submit" class="btn btn-dark btn-lg" form="edit-product-form"><i class="fas fa-save me-2"></i> บันทึกการเปลี่ยนแปลง</button>
+</div>
+
+{% endblock %}

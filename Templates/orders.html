@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block title %}จัดการคำสั่งซื้อ{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* สไตล์เดิมดีอยู่แล้ว สามารถคงไว้ได้ */
+    .order-card-custom {
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+        background-color: #fff;
+        margin-bottom: 1.25rem;
+        transition: box-shadow .2s ease-in-out;
+    }
+    .order-card-custom:hover {
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.075)!important;
+    }
+    .order-card-custom .card-header-custom,
+    .order-card-custom .card-body {
+        padding: 1rem 1.25rem;
+        background-color: #fff;
+    }
+    .order-card-custom .card-footer {
+        padding: 0.75rem 1.25rem;
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+    .order-card-custom .product-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 0.25rem;
+    }
+    .summary-card .card-body { text-align: center; }
+    .summary-card .card-subtitle { font-weight: 500; }
+    .status-badge { font-size: 0.9rem; font-weight: 500; padding: 0.4em 0.7em; }
+    
+    .summary-card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+    .summary-card:hover {
+        transform: translateY(-3px);
+        transition: transform .2s ease-in-out, box-shadow .2s ease-in-out;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h2 class="mb-0"><i class="fas fa-shipping-fast me-2"></i> จัดการคำสั่งซื้อ</h2>
+    <div>
+        <a href="{{ url_for('order.create_order_page') }}" class="btn btn-primary"><i class="fas fa-plus"></i> สร้างคำสั่งซื้อ</a>
+        <a href="{{ url_for('order.import_orders') }}" class="btn btn-outline-secondary"><i class="fas fa-file-import"></i> นำเข้าออเดอร์</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-3">
+        <a href="{{ url_for('order.orders_list', tab='ที่จะจัดส่ง') }}" class="summary-card-link">
+            <div class="card h-100 border-warning border-2 shadow-sm summary-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-warning-emphasis">ที่จะจัดส่ง</h6>
+                    <p class="card-text fs-2 fw-bold mb-0">{{ summary_counts.pending }}</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <a href="{{ url_for('order.orders_list', filter='overdue') }}" class="summary-card-link">
+            <div class="card h-100 border-danger border-2 shadow-sm summary-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-danger-emphasis">เกินกำหนดส่ง</h6>
+                    <p class="card-text fs-2 fw-bold mb-0">{{ summary_counts.overdue }}</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <a href="{{ url_for('order.orders_list', tab='บันทึกวิดีโอแล้ว') }}" class="summary-card-link">
+             <div class="card h-100 border-secondary border-2 shadow-sm summary-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-secondary-emphasis">บันทึกวิดีโอแล้ว</h6>
+                    <p class="card-text fs-2 fw-bold mb-0">{{ summary_counts.video_recorded }}</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <a href="{{ url_for('order.orders_list', tab='รอรถเข้ารับ') }}" class="summary-card-link">
+            <div class="card h-100 border-info border-2 shadow-sm summary-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-info-emphasis">รอรถเข้ารับ</h6>
+                    <p class="card-text fs-2 fw-bold mb-0">{{ summary_counts.awaiting_collection }}</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form action="{{ url_for('order.orders_list') }}" method="get" id="filter-form">
+            <input type="hidden" name="tab" value="{{ status_tab }}">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label for="q" class="form-label small">ค้นหา</label>
+                    <input type="text" name="q" id="q" class="form-control" placeholder="ID, ชื่อ, Tracking, SKU..." value="{{ keyword or '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="sales_channel" class="form-label small">ช่องทางการขาย</label>
+                    <select name="sales_channel" id="sales_channel" class="form-select">
+                        <option value="">ทั้งหมด</option>
+                        {% for channel in sales_channels %}
+                            <option value="{{ channel.id }}" {% if query_params.get('sales_channel')|int == channel.id %}selected{% endif %}>{{ channel.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                     <label class="form-label small">วันที่สั่งซื้อ</label>
+                     <div class="input-group">
+                        <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date or '' }}">
+                        <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date or '' }}">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+                        <a href="{{ url_for('order.orders_list', tab=status_tab) }}" class="btn btn-light" title="ล้างฟิลเตอร์" aria-label="ล้างฟิลเตอร์"><i class="fas fa-times"></i></a>
+                     </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<form method="POST" action="{{ url_for('order.bulk_action') }}" id="bulk-action-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <ul class="nav nav-tabs mb-3">
+                {% set tabs = ['ทั้งหมด', 'ที่จะจัดส่ง', 'บันทึกวิดีโอแล้ว', 'รอรถเข้ารับ', 'จัดส่งแล้ว', 'เสร็จสิ้น', 'ยกเลิกแล้ว'] %}
+                {% for tab in tabs %}
+                <li class="nav-item">
+                    <a class="nav-link {% if status_tab == tab %}active{% endif %}" href="{{ url_for('order.orders_list', tab=tab, q=keyword) }}">{{ tab }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="form-check"> {# ส่วนที่เพิ่มเข้ามา #}
+                    <input class="form-check-input" type="checkbox" id="select-all-orders">
+                    <label class="form-check-label" for="select-all-orders">
+                        เลือกทั้งหมด
+                    </label>
+                </div>
+                <div class="btn-group d-none" id="bulk-action-controls">
+                    <button type="button" class="btn btn-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        สำหรับ (<span id="selected-count">0</span>) รายการ
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="bulkPrintHandler('label'); return false;"><i class="fas fa-print fa-fw me-2"></i>พิมพ์ใบปะหน้า</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="bulkPrintHandler('packing_list'); return false;"><i class="fas fa-file-csv fa-fw me-2"></i>ส่งออกรายการจัดของ</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" type="submit" name="action" value="set_video_recorded"><i class="fas fa-video fa-fw me-2"></i>เปลี่ยนเป็น "บันทึกวิดีโอแล้ว"</button></li>
+                        <li><button class="dropdown-item" type="submit" name="action" value="set_awaiting_collection"><i class="fas fa-box-open fa-fw me-2"></i>เปลี่ยนเป็น "รอรถเข้ารับ"</button></li>
+                        <li><button class="dropdown-item" type="submit" name="action" value="set_shipped"><i class="fas fa-truck fa-fw me-2"></i>เปลี่ยนเป็น "จัดส่งแล้ว"</button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item text-danger" type="submit" name="action" value="move_to_trash" onclick="return confirm('คุณแน่ใจหรือไม่ที่จะย้ายรายการที่เลือกไปที่ถังขยะ?');"><i class="fas fa-trash fa-fw me-2"></i>ย้ายไปถังขยะ</button></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="order-list-container" id="order-list-container">
+                {% for order in orders %}
+                <div class="order-card-custom">
+                    <div class="card-header-custom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <input class="form-check-input order-checkbox m-0" type="checkbox" name="order_ids[]" value="{{ order.id }}" id="order-check-{{ order.id }}">
+                                <label class="form-check-label" for="order-check-{{ order.id }}">
+                                    <strong class="text-primary">ออเดอร์ #{{ order.id }}</strong>
+                                    {% if order.sales_channel_name %}
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill fw-normal">{{ order.sales_channel_name }}</span>
+                                    {% endif %}
+                                </label>
+                                <small class="text-muted d-none d-lg-block"><i class="far fa-clock"></i> {{ safe_format_date(order.order_date) }}</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if order.pack_video_filename %}
+                                <i class="fas fa-video fa-fw text-success" title="บันทึกวิดีโอแล้ว: {{ order.pack_video_filename }}"></i>
+                                {% endif %}
+                                <span class="badge status-badge {{ get_status_badge_class(order.status) }}">{{ order.status }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body border-bottom">
+                         {% if order.first_item %}
+                         <div class="d-flex align-items-center">
+                             <img src="{{ url_for('static', filename='uploads/products/' + (order.first_item.image_filename or 'placeholder.png')) }}" class="product-image border">
+                             <div class="ms-3 flex-grow-1">
+                                 <p class="mb-1 fw-bold">{{ order.first_item.name }}
+                                     {% if order.item_count > 1 %}
+                                         <span class="small text-muted fw-normal ms-1">+ อีก {{ order.item_count - 1 }} รายการ</span>
+                                     {% endif %}
+                                 </p>
+                                 <p class="mb-1 small text-muted">SKU: {{ order.first_item.sku }} | จำนวน: {{ order.first_item.quantity }}</p>
+                             </div>
+                         </div>
+                         {% else %}
+                             <p class="text-muted fst-italic">ไม่มีข้อมูลสินค้าในออเดอร์นี้</p>
+                         {% endif %}
+                    </div>
+                     <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                         <div class="small text-muted">
+                             <div><i class="fas fa-user fa-fw me-1"></i> {{ order.customer_name }}</div>
+                             <div>
+                                <i class="fas fa-barcode fa-fw me-1"></i> 
+                                {% if order.tracking_no %}
+                                    <a href="{{ track_url(order.tracking_provider, order.tracking_no) }}" target="_blank" class="fw-bold text-dark">{{ order.tracking_no }}</a>
+                                    {% if order.tracking_provider %}<span class="small"> ({{ order.tracking_provider }})</span>{% endif %}
+                                {% else %}
+                                    <span class="text-dark">ยังไม่มี Tracking</span>
+                                {% endif %}
+                             </div>
+                         </div>
+                         <div class="d-flex align-items-center gap-2">
+                            <a href="{{ url_for('order.shipping_label', id=order.id) }}" class="btn btn-sm btn-outline-secondary" title="พิมพ์ใบปะหน้า"><i class="fas fa-print"></i></a>
+                            
+                            <div class="btn-group">
+                                <a href="{{ url_for('order.view_order', id=order.id) }}" class="btn btn-primary btn-sm">ดูรายละเอียด</a>
+                                <button type="button" class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="visually-hidden">จัดการด่วน</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><button class="dropdown-item" type="submit" form="bulk-action-form" name="action" value="set_video_recorded:{{order.id}}">เปลี่ยนเป็น "บันทึกวิดีโอแล้ว"</button></li>
+                                    <li><button class="dropdown-item" type="submit" form="bulk-action-form" name="action" value="set_shipped:{{order.id}}">เปลี่ยนเป็น "จัดส่งแล้ว"</button></li>
+                                </ul>
+                            </div>
+
+                         </div>
+                     </div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <h4>ไม่พบข้อมูลคำสั่งซื้อ</h4>
+                    <p>ลองเปลี่ยนเงื่อนไขการค้นหาหรือสถานะ</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</form>
+
+{# ✨ ฉบับแก้ไข: ส่วนแสดงเลขหน้า (Pagination) ✨ #}
+{% if total_pages > 1 %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {# ปุ่ม 'ก่อนหน้า' #}
+        <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('order.orders_list', page=current_page - 1, **query_params) }}">ก่อนหน้า</a>
+        </li>
+
+        {# แสดงผลเลขหน้า #}
+        {% for page_num in range(1, total_pages + 1) %}
+            {% if page_num == 1 or page_num == total_pages or page_num >= current_page - 2 and page_num <= current_page + 2 %}
+                <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('order.orders_list', page=page_num, **query_params) }}">{{ page_num }}</a>
+                </li>
+            {% elif page_num == current_page - 3 or page_num == current_page + 3 %}
+                 <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endfor %}
+
+        {# ปุ่ม 'ถัดไป' #}
+        <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('order.orders_list', page=current_page + 1, **query_params) }}">ถัดไป</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const orderCheckboxes = document.querySelectorAll('.order-checkbox');
+    const bulkActionControls = document.getElementById('bulk-action-controls');
+    const selectedCountSpan = document.getElementById('selected-count');
+    const selectAllCheckbox = document.getElementById('select-all-orders'); // เลือก checkbox "เลือกทั้งหมด"
+
+    function updateBulkActionUI() {
+        const selectedCheckboxes = document.querySelectorAll('.order-checkbox:checked');
+        const count = selectedCheckboxes.length;
+        if(selectedCountSpan) selectedCountSpan.textContent = count;
+        if(bulkActionControls) bulkActionControls.classList.toggle('d-none', count === 0);
+
+        // อัปเดตสถานะของ selectAllCheckbox หากผู้ใช้เลือก/ยกเลิกการเลือกบางรายการด้วยตนเอง
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = count === orderCheckboxes.length && count > 0;
+            selectAllCheckbox.indeterminate = count > 0 && count < orderCheckboxes.length;
+        }
+    }
+    
+    orderCheckboxes.forEach(checkbox => checkbox.addEventListener('change', updateBulkActionUI));
+    updateBulkActionUI();
+
+    // เพิ่ม Event Listener สำหรับ selectAllCheckbox
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            orderCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateBulkActionUI();
+        });
+    }
+});
+
+function bulkPrintHandler(type) {
+    const form = document.getElementById('bulk-action-form');
+    const selectedIds = Array.from(form.querySelectorAll('input[name="order_ids[]"]:checked')).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        alert('กรุณาเลือกรายการที่ต้องการ');
+        return;
+    }
+
+    let url;
+    if (type === 'label') {
+        url = `{{ url_for('order.bulk_shipping_label') }}?ids=${selectedIds.join(',')}`;
+        window.open(url, '_blank'); 
+    } else if (type === 'packing_list') {
+        url = `{{ url_for('order.export_packing_list') }}?ids=${selectedIds.join(',')}`;
+        window.location.href = url;
+    }
+}
+</script>
+{% endblock %}
