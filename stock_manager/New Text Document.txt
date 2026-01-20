@@ -1,0 +1,260 @@
+import sys
+import os
+import configparser
+import threading
+import requests
+import pygame
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget,
+                             QLineEdit, QPushButton, QHBoxLayout, QFrame, QMessageBox, 
+                             QRadioButton, QButtonGroup)
+from PyQt6.QtGui import QPixmap, QFont, QImage, QColor
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, pyqtSlot, QTimer
+
+# --- ตั้งค่าไฟล์ Config และเสียง (ใช้ร่วมกับโปรแกรมอัดวิดีโอได้) ---
+CONFIG_FILE = 'config.ini'
+SOUND_SUCCESS = "success.wav"
+SOUND_ERROR = "error.wav"
+
+# สร้างไฟล์เสียงเปล่าๆ ถ้ายังไม่มี (กัน Error)
+if not os.path.exists(SOUND_SUCCESS): open(SOUND_SUCCESS, "w").close()
+if not os.path.exists(SOUND_ERROR): open(SOUND_ERROR, "w").close()
+
+pygame.mixer.init()
+
+def play_sound(status):
+    try:
+        sound_file = SOUND_SUCCESS if status else SOUND_ERROR
+        if os.path.getsize(sound_file) > 0:
+            pygame.mixer.music.load(sound_file)
+            pygame.mixer.music.play()
+    except Exception: pass
+
+def load_config():
+    config = configparser.ConfigParser()
+    config.read(CONFIG_FILE, encoding='utf-8')
+    if not config.has_section('API'):
+        config.add_section('API')
+        config.set('API', 'server_ip', '127.0.0.1')
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f: config.write(f)
+    return config
+
+# --- Worker Thread สำหรับยิง API (เพื่อไม่ให้หน้าจอค้าง) ---
+class ApiWorker(QThread):
+    result_ready = pyqtSignal(dict, bool) # data, success
+
+    def __init__(self, api_url, sku, mode):
+        super().__init__()
+        self.api_url = api_url
+        self.sku = sku
+        self.mode = mode
+
+    def run(self):
+        try:
+            # ยิง Request ไปที่ Server Flask
+            payload = {'sku': self.sku, 'mode': self.mode}
+            response = requests.post(self.api_url, json=payload, timeout=5)
+            
+            data = response.json()
+            if response.status_code == 200 and data.get('success'):
+                self.result_ready.emit(data, True)
+            else:
+                self.result_ready.emit(data, False)
+        except requests.exceptions.ConnectionError:
+            self.result_ready.emit({'message': 'เชื่อมต่อ Server ไม่ได้'}, False)
+        except Exception as e:
+            self.result_ready.emit({'message': str(e)}, False)
+
+# --- Main Application ---
+class StockManagerWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.config = load_config()
+        self.server_ip = self.config.get('API', 'server_ip')
+        
+        # URL API (ต้องตรงกับที่เขียนไว้ใน product.py)
+        self.api_url = f"http://{self.server_ip}:5000/products/api/quick_adjust_stock"
+        self.img_base_url = f"http://{self.server_ip}:5000/static/product_images/"
+
+        self.input_buffer = "" # รับค่าจาก Barcode Scanner
+        self.setWindowTitle("Stock Flow Manager")
+        self.setGeometry(100, 100, 600, 700)
+        self.setup_ui()
+
+    def setup_ui(self):
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(30, 30, 30, 30)
+
+        # 1. Header & Mode Selection
+        header_layout = QHBoxLayout()
+        
+        self.mode_group = QButtonGroup(self)
+        
+        self.btn_in = QRadioButton("รับเข้า (IN)")
+        self.btn_in.setChecked(True) # Default
+        self.btn_in.setFont(QFont('Arial', 18, QFont.Weight.Bold))
+        self.btn_in.setStyleSheet("QRadioButton::indicator { width: 25px; height: 25px; }")
+        
+        self.btn_out = QRadioButton("เบิกออก (OUT)")
+        self.btn_out.setFont(QFont('Arial', 18, QFont.Weight.Bold))
+        self.btn_out.setStyleSheet("QRadioButton::indicator { width: 25px; height: 25px; }")
+
+        self.mode_group.addButton(self.btn_in)
+        self.mode_group.addButton(self.btn_out)
+        
+        # Event เปลี่ยนสีพื้นหลังตามโหมด
+        self.mode_group.buttonClicked.connect(self.update_mode_style)
+
+        header_layout.addWidget(self.btn_in)
+        header_layout.addWidget(self.btn_out)
+        main_layout.addLayout(header_layout)
+
+        # 2. Product Image Area
+        self.image_label = QLabel("รอสแกนสินค้า...")
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_label.setFixedSize(400, 400)
+        self.image_label.setStyleSheet("background-color: #333; color: #aaa; border-radius: 10px; font-size: 20px;")
+        
+        img_container = QHBoxLayout()
+        img_container.addStretch()
+        img_container.addWidget(self.image_label)
+        img_container.addStretch()
+        main_layout.addLayout(img_container)
+
+        # 3. Product Info Area
+        self.lbl_product_name = QLabel("-")
+        self.lbl_product_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_product_name.setFont(QFont('Arial', 22, QFont.Weight.Bold))
+        self.lbl_product_name.setWordWrap(True)
+        self.lbl_product_name.setStyleSheet("color: white;")
+        main_layout.addWidget(self.lbl_product_name)
+
+        # Stock Change Display
+        stock_layout = QHBoxLayout()
+        self.lbl_old_stock = QLabel("0")
+        self.lbl_arrow = QLabel("➜")
+        self.lbl_new_stock = QLabel("0")
+        
+        for lbl in [self.lbl_old_stock, self.lbl_arrow, self.lbl_new_stock]:
+            lbl.setFont(QFont('Arial', 40, QFont.Weight.Bold))
+            lbl.setStyleSheet("color: #888;")
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        self.lbl_new_stock.setStyleSheet("color: white;") # ตัวเลขใหม่เด่นๆ
+
+        stock_layout.addWidget(self.lbl_old_stock)
+        stock_layout.addWidget(self.lbl_arrow)
+        stock_layout.addWidget(self.lbl_new_stock)
+        main_layout.addLayout(stock_layout)
+
+        # 4. Input Field (Hidden or Visible for manual typing)
+        self.txt_input = QLineEdit()
+        self.txt_input.setPlaceholderText("สแกนบาร์โค้ด หรือ พิมพ์ SKU...")
+        self.txt_input.setFont(QFont('Arial', 14))
+        self.txt_input.setStyleSheet("padding: 10px; border-radius: 5px; background: #444; color: white; border: 1px solid #555;")
+        self.txt_input.returnPressed.connect(self.process_input)
+        main_layout.addWidget(self.txt_input)
+
+        # 5. Status Bar
+        self.lbl_status = QLabel("Ready")
+        self.lbl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_status.setFont(QFont('Arial', 14))
+        self.lbl_status.setStyleSheet("background-color: #555; color: white; padding: 10px; border-radius: 5px;")
+        main_layout.addWidget(self.lbl_status)
+
+        self.update_mode_style() # Set initial style
+
+    def update_mode_style(self):
+        """เปลี่ยนสี Theme ตามโหมด (เขียว=เข้า, แดง=ออก)"""
+        if self.btn_in.isChecked():
+            color = "#2e7d32" # Green
+            self.lbl_status.setText("โหมด: รับสินค้าเข้าสต็อก (Scan to ADD)")
+        else:
+            color = "#c62828" # Red
+            self.lbl_status.setText("โหมด: เบิกสินค้าออก (Scan to REMOVE)")
+        
+        self.centralWidget().setStyleSheet(f"background-color: #222;") # Dark bg
+        self.lbl_new_stock.setStyleSheet(f"color: {color};")
+        self.lbl_status.setStyleSheet(f"background-color: {color}; color: white; padding: 10px; border-radius: 5px;")
+        self.txt_input.setFocus()
+
+    def keyPressEvent(self, event):
+        """ดักจับแป้นพิมพ์กรณีไม่ได้ Focus ช่อง Input (สำหรับ Scanner บางรุ่น)"""
+        if not self.txt_input.hasFocus():
+            if event.key() == Qt.Key.Key_Return or event.key() == Qt.Key.Key_Enter:
+                self.txt_input.setText(self.input_buffer)
+                self.process_input()
+                self.input_buffer = ""
+            else:
+                self.input_buffer += event.text()
+        else:
+            super().keyPressEvent(event)
+
+    def process_input(self):
+        sku = self.txt_input.text().strip()
+        if not sku: return
+
+        mode = 'in' if self.btn_in.isChecked() else 'out'
+        
+        # Disable input while processing
+        self.txt_input.setEnabled(False)
+        self.lbl_status.setText(f"กำลังประมวลผล SKU: {sku}...")
+        
+        # Start Worker Thread
+        self.worker = ApiWorker(self.api_url, sku, mode)
+        self.worker.result_ready.connect(self.on_api_finished)
+        self.worker.start()
+
+    def on_api_finished(self, data, success):
+        self.txt_input.setEnabled(True)
+        self.txt_input.clear()
+        self.txt_input.setFocus()
+
+        # Play sound
+        threading.Thread(target=play_sound, args=(success,)).start()
+
+        if success:
+            product = data.get('product', {})
+            self.lbl_product_name.setText(product.get('name', 'Unknown'))
+            self.lbl_old_stock.setText(str(product.get('old_stock', '-')))
+            self.lbl_new_stock.setText(str(product.get('new_stock', '-')))
+            self.lbl_status.setText(data.get('message', 'สำเร็จ'))
+            
+            # Update Image
+            img_filename = product.get('image')
+            if img_filename:
+                self.load_image_from_url(self.img_base_url + img_filename)
+            else:
+                self.image_label.setText("No Image")
+                self.image_label.setPixmap(QPixmap())
+        else:
+            self.lbl_status.setText(f"Error: {data.get('message', 'Unknown Error')}")
+            # Reset display on error
+            self.lbl_product_name.setText("-")
+            self.lbl_old_stock.setText("-")
+            self.lbl_new_stock.setText("-")
+
+    def load_image_from_url(self, url):
+        """โหลดรูปภาพจาก URL มาแสดง"""
+        try:
+            response = requests.get(url, timeout=3)
+            if response.status_code == 200:
+                img_data = response.content
+                qimg = QImage.fromData(img_data)
+                pixmap = QPixmap.fromImage(qimg)
+                
+                # Scale image to fit label
+                scaled_pixmap = pixmap.scaled(self.image_label.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                self.image_label.setPixmap(scaled_pixmap)
+            else:
+                self.image_label.setText("Image not found")
+        except:
+            self.image_label.setText("Error loading image")
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = StockManagerWindow()
+    window.show()
+    sys.exit(app.exec())
